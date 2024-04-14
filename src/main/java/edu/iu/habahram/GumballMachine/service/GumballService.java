@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Function;
 
 @Service
 public class GumballService implements IGumballService{
@@ -20,13 +19,14 @@ public class GumballService implements IGumballService{
         this.gumballRepository = gumballRepository;
     }
 
-    private TransitionResult performTransition(String id, Function<IGumballMachine, TransitionResult> transitionFunction) throws IOException {
+    @Override
+    public TransitionResult insertQuarter(String id) throws IOException {
         GumballMachineRecord record = gumballRepository.findById(id);
         if (record == null) {
             throw new IllegalArgumentException("Gumball Machine not found with id: " + id);
         }
         IGumballMachine machine = new GumballMachine(record.getId(), record.getState(), record.getCount());
-        TransitionResult result = transitionFunction.apply(machine);
+        TransitionResult result = machine.insertQuarter();
         if(result.succeeded()) {
             record.setState(result.stateAfter());
             record.setCount(result.countAfter());
@@ -36,18 +36,34 @@ public class GumballService implements IGumballService{
     }
 
     @Override
-    public TransitionResult insertQuarter(String id) throws IOException {
-        return performTransition(id, IGumballMachine::insertQuarter);
-    }
-
-    @Override
     public TransitionResult ejectQuarter(String id) throws IOException {
-        return performTransition(id, IGumballMachine::ejectQuarter);
+        GumballMachineRecord record = gumballRepository.findById(id);
+        if (record == null) {
+            throw new IllegalArgumentException("Gumball Machine not found with id: " + id);
+        }
+        IGumballMachine machine = new GumballMachine(record.getId(), record.getState(), record.getCount());
+        TransitionResult result = machine.ejectQuarter();
+        if(result.succeeded()) {
+            record.setState(result.stateAfter());
+            save(record);
+        }
+        return result;
     }
 
     @Override
     public TransitionResult turnCrank(String id) throws IOException {
-        return performTransition(id, IGumballMachine::turnCrank);
+        GumballMachineRecord record = gumballRepository.findById(id);
+        if (record == null) {
+            throw new IllegalArgumentException("Gumball Machine not found with id: " + id);
+        }
+        IGumballMachine machine = new GumballMachine(record.getId(), record.getState(), record.getCount());
+        TransitionResult result = machine.turnCrank();
+        if(result.succeeded()) {
+            record.setState(result.stateAfter());
+            record.setCount(result.countAfter());
+            save(record);
+        }
+        return result;
     }
 
     @Override
