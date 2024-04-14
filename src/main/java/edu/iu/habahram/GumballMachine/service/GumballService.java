@@ -22,6 +22,9 @@ public class GumballService implements IGumballService{
     @Override
     public TransitionResult insertQuarter(String id) throws IOException {
         GumballMachineRecord record = gumballRepository.findById(id);
+        if (record == null) {
+            throw new IllegalArgumentException("Gumball Machine not found with id: " + id);
+        }
         IGumballMachine machine = new GumballMachine(record.getId(), record.getState(), record.getCount());
         TransitionResult result = machine.insertQuarter();
         if(result.succeeded()) {
@@ -33,16 +36,46 @@ public class GumballService implements IGumballService{
     }
 
     @Override
-    public TransitionResult ejectQuarter(String id) {
-        return null;
+    public TransitionResult ejectQuarter(String id) throws IOException {
+        GumballMachineRecord record = gumballRepository.findById(id);
+        if (record == null) {
+            throw new IllegalArgumentException("Gumball Machine not found with id: " + id);
+        }
+        IGumballMachine machine = new GumballMachine(record.getId(), record.getState(), record.getCount());
+        TransitionResult result = machine.ejectQuarter();
+        if(result.succeeded()) {
+            record.setState(result.stateAfter());
+            save(record);
+        }
+        return result;
     }
 
     @Override
-    public TransitionResult turnCrank(String id) {
-        return null;
+    public TransitionResult turnCrank(String id) throws IOException {
+        GumballMachineRecord record = gumballRepository.findById(id);
+        if (record == null) {
+            throw new IllegalArgumentException("Gumball Machine not found with id: " + id);
+        }
+        IGumballMachine machine = new GumballMachine(record.getId(), record.getState(), record.getCount());
+        TransitionResult result = machine.turnCrank();
+        if(result.succeeded()) {
+            record.setState(result.stateAfter());
+            record.setCount(result.countAfter());
+            save(record);
+        }
+        return result;
     }
 
-    
+    @Override
+    public GumballMachineRecord refill(String id, int count) throws IOException {
+        GumballMachineRecord record = gumballRepository.findById(id);
+        if (record == null) {
+            throw new IllegalArgumentException("Gumball Machine not found with id: " + id);
+        }
+        record.setCount(record.getCount() + count);
+        save(record);
+        return record;
+    }
 
     @Override
     public List<GumballMachineRecord> findAll() throws IOException {

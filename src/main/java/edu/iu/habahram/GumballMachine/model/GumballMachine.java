@@ -35,14 +35,35 @@ public class GumballMachine implements IGumballMachine {
 
     @Override
     public TransitionResult ejectQuarter() {
-        //TODO
-        return null;
+        boolean succeeded = false;
+        String message = "";
+        if (state.equalsIgnoreCase(HAS_QUARTER)) {
+            state = NO_QUARTER;
+            message = "Quarter ejected";
+            succeeded = true;
+        } else {
+            message = "You haven't inserted a quarter";
+        }
+        return new TransitionResult(succeeded, message, state, count);
     }
 
     @Override
     public TransitionResult turnCrank() {
-        //TODO
-        return null;
+        boolean succeeded = false;
+        String message = "";
+        if (state.equalsIgnoreCase(HAS_QUARTER)) {
+            if (count > 0) {
+                state = NO_QUARTER;
+                count--;
+                message = "You turned... A gumball comes rolling out the slot";
+                succeeded = true;
+            } else {
+                message = "No gumball dispensed";
+            }
+        } else {
+            message = "You turned but there's no quarter";
+        }
+        return new TransitionResult(succeeded, message, state, count);
     }
 
     @Override
